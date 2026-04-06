@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python3 -c \"import flask; print\\(flask.__version__\\)\")",
+      "Bash(py -c \"import flask; print\\(flask.__version__\\)\")",
+      "Bash(py -c \"import sys; print\\(sys.executable, sys.version\\); import pandas; print\\('pandas ok'\\)\")",
+      "Bash(py -m pip install flask)",
+      "Bash(py app.py)"
+    ]
+  }
+}

@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Comparar agendas</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: "Segoe UI", system-ui, sans-serif;
+      background: #0f1117;
+      color: #e2e8f0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 2rem 1rem;
+    }
+
+    h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      color: #f8fafc;
+      margin-bottom: 0.25rem;
+    }
+    .subtitle {
+      font-size: 0.85rem;
+      color: #64748b;
+      margin-bottom: 2rem;
+    }
+
+    .card {
+      background: #1e2130;
+      border: 1px solid #2d3350;
+      border-radius: 14px;
+      padding: 1.75rem 2rem;
+      width: 100%;
+      max-width: 640px;
+      margin-bottom: 1.5rem;
+    }
+
+    .card h2 {
+      font-size: 1rem;
+      font-weight: 600;
+      color: #94a3b8;
+      margin-bottom: 1.25rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    .field { margin-bottom: 1.1rem; }
+
+    label {
+      display: block;
+      font-size: 0.82rem;
+      color: #94a3b8;
+      margin-bottom: 0.4rem;
+      font-weight: 500;
+    }
+
+    /* drop zones */
+    .drop-zone {
+      border: 2px dashed #2d3350;
+      border-radius: 10px;
+      padding: 1.4rem 1rem;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color .2s, background .2s;
+      position: relative;
+    }
+    .drop-zone:hover, .drop-zone.over { border-color: #6366f1; background: #1a1d2e; }
+    .drop-zone input[type=file] {
+      position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%;
+    }
+    .drop-zone .icon { font-size: 1.8rem; margin-bottom: 0.3rem; }
+    .drop-zone .hint { font-size: 0.78rem; color: #475569; margin-top: 0.2rem; }
+    .drop-zone .filename {
+      margin-top: 0.5rem; font-size: 0.82rem; color: #818cf8;
+      font-weight: 600; word-break: break-all;
+    }
+
+    /* coluna select */
+    #campo-coluna { display: none; }
+    select {
+      width: 100%;
+      background: #0f1117;
+      border: 1px solid #2d3350;
+      border-radius: 8px;
+      color: #e2e8f0;
+      padding: 0.55rem 0.75rem;
+      font-size: 0.88rem;
+      cursor: pointer;
+    }
+    select:focus { outline: none; border-color: #6366f1; }
+
+    /* botão */
+    button#btn-comparar {
+      width: 100%;
+      padding: 0.75rem;
+      background: #6366f1;
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background .2s, opacity .2s;
+    }
+    button#btn-comparar:hover { background: #4f46e5; }
+    button#btn-comparar:disabled { opacity: .5; cursor: not-allowed; }
+
+    /* spinner */
+    #spinner {
+      display: none;
+      margin: 0.5rem auto 0;
+      width: 28px; height: 28px;
+      border: 3px solid #2d3350;
+      border-top-color: #6366f1;
+      border-radius: 50%;
+      animation: spin .7s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* erro */
+    #erro {
+      display: none;
+      background: #2d1a1a;
+      border: 1px solid #7f1d1d;
+      color: #fca5a5;
+      border-radius: 10px;
+      padding: 0.85rem 1rem;
+      font-size: 0.88rem;
+      max-width: 640px;
+      width: 100%;
+      margin-bottom: 1.5rem;
+    }
+
+    /* resultado */
+    #resultado { display: none; width: 100%; max-width: 640px; }
+
+    .stat-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0.75rem;
+      margin-bottom: 1rem;
+    }
+    .stat-box {
+      background: #0f1117;
+      border: 1px solid #2d3350;
+      border-radius: 10px;
+      padding: 0.85rem 0.75rem;
+      text-align: center;
+    }
+    .stat-box .valor {
+      font-size: 1.7rem;
+      font-weight: 700;
+      line-height: 1;
+    }
+    .stat-box .rotulo { font-size: 0.7rem; color: #64748b; margin-top: 0.2rem; }
+    .verde { color: #4ade80; }
+    .amarelo { color: #facc15; }
+    .azul { color: #60a5fa; }
+
+    .badge-ok {
+      display: inline-block;
+      background: #14532d;
+      color: #4ade80;
+      border-radius: 99px;
+      padding: 0.25rem 0.9rem;
+      font-size: 0.8rem;
+      font-weight: 600;
+      margin-bottom: 1rem;
+    }
+    .badge-warn {
+      display: inline-block;
+      background: #451a03;
+      color: #fb923c;
+      border-radius: 99px;
+      padding: 0.25rem 0.9rem;
+      font-size: 0.8rem;
+      font-weight: 600;
+      margin-bottom: 1rem;
+    }
+
+    .coluna-info {
+      font-size: 0.78rem;
+      color: #475569;
+      margin-bottom: 1rem;
+    }
+    .coluna-info span { color: #818cf8; font-weight: 600; }
+
+    .div-section { margin-top: 0.5rem; }
+    .div-section h3 {
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: #64748b;
+      margin-bottom: 0.5rem;
+    }
+
+    .list-div {
+      list-style: none;
+      max-height: 220px;
+      overflow-y: auto;
+      border: 1px solid #2d3350;
+      border-radius: 8px;
+      padding: 0.25rem 0;
+    }
+    .list-div li {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      padding: 0.45rem 0.85rem;
+      font-size: 0.84rem;
+      border-bottom: 1px solid #1e2130;
+    }
+    .list-div li:last-child { border-bottom: none; }
+    .tag {
+      font-size: 0.68rem;
+      padding: 0.15rem 0.55rem;
+      border-radius: 99px;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+    .tag-excel { background: #1e3a5f; color: #60a5fa; }
+    .tag-pdf   { background: #2d1a3d; color: #c084fc; }
+
+    .btn-download-group {
+      display: flex;
+      gap: 0.6rem;
+      margin-top: 1.25rem;
+      flex-wrap: wrap;
+    }
+    .btn-dl {
+      flex: 1;
+      min-width: 160px;
+      padding: 0.6rem 1rem;
+      border: none;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      text-align: center;
+      transition: opacity .2s;
+    }
+    .btn-dl:hover { opacity: .85; }
+    .btn-dl-ev  { background: #1e3a5f; color: #93c5fd; }
+    .btn-dl-bug { background: #3b1514; color: #fca5a5; }
+
+    /* scrollbar */
+    .list-div::-webkit-scrollbar { width: 6px; }
+    .list-div::-webkit-scrollbar-track { background: #1e2130; }
+    .list-div::-webkit-scrollbar-thumb { background: #2d3350; border-radius: 3px; }
+  </style>
+</head>
+<body>
+
+  <h1>Comparador de Agendas</h1>
+  <p class="subtitle"></p>
+
+  <div class="card">
+    <h2>Arquivos</h2>
+
+    <div class="field">
+      <label>Arquivo X — Planilha Excel (.xlsx)</label>
+      <div class="drop-zone" id="zone-excel">
+        <div class="icon">📊</div>
+        <div>Clique ou arraste o Excel aqui</div>
+        <div class="hint">.xlsx</div>
+        <div class="filename" id="nome-excel"></div>
+        <input type="file" id="input-excel" accept=".xlsx,.xls" />
+      </div>
+    </div>
+
+    <div class="field" id="campo-coluna">
+      <label>Coluna de nomes detectada — ajuste se necessário</label>
+      <select id="select-coluna"></select>
+    </div>
+
+    <div class="field">
+      <label>Arquivo Y — ZIP com os PDFs / agendas</label>
+      <div class="drop-zone" id="zone-zip">
+        <div class="icon">📁</div>
+        <div>Clique ou arraste o ZIP aqui</div>
+        <div class="hint">.zip</div>
+        <div class="filename" id="nome-zip"></div>
+        <input type="file" id="input-zip" accept=".zip" />
+      </div>
+    </div>
+
+    <button id="btn-comparar" disabled>Comparar</button>
+    <div id="spinner"></div>
+  </div>
+
+  <div id="erro"></div>
+  <div id="resultado"></div>
+
+<script>
+  const inputExcel = document.getElementById("input-excel");
+  const inputZip   = document.getElementById("input-zip");
+  const nomeExcel  = document.getElementById("nome-excel");
+  const nomeZip    = document.getElementById("nome-zip");
+  const campoCol   = document.getElementById("campo-coluna");
+  const selectCol  = document.getElementById("select-coluna");
+  const btnComp    = document.getElementById("btn-comparar");
+  const spinner    = document.getElementById("spinner");
+  const erroDiv    = document.getElementById("erro");
+  const resultDiv  = document.getElementById("resultado");
+
+  // drag-over highlight
+  document.querySelectorAll(".drop-zone").forEach(z => {
+    z.addEventListener("dragover",  e => { e.preventDefault(); z.classList.add("over"); });
+    z.addEventListener("dragleave", () => z.classList.remove("over"));
+    z.addEventListener("drop", e => {
+      e.preventDefault(); z.classList.remove("over");
+      const inp = z.querySelector("input[type=file]");
+      inp.files = e.dataTransfer.files;
+      inp.dispatchEvent(new Event("change"));
+    });
+  });
+
+  // ao selecionar Excel → busca colunas
+  inputExcel.addEventListener("change", async () => {
+    const f = inputExcel.files[0];
+    if (!f) return;
+    nomeExcel.textContent = f.name;
+    campoCol.style.display = "none";
+    selectCol.innerHTML = "";
+
+    const fd = new FormData();
+    fd.append("excel", f);
+    try {
+      const res = await fetch("/colunas", { method: "POST", body: fd });
+      const data = await res.json();
+      if (data.erro) return;
+      data.colunas.forEach(c => {
+        const opt = document.createElement("option");
+        opt.value = c; opt.textContent = c;
+        if (c === data.sugerida) opt.selected = true;
+        selectCol.appendChild(opt);
+      });
+      campoCol.style.display = "block";
+    } catch (_) {}
+    verificarBotao();
+  });
+
+  inputZip.addEventListener("change", () => {
+    const f = inputZip.files[0];
+    if (f) nomeZip.textContent = f.name;
+    verificarBotao();
+  });
+
+  function verificarBotao() {
+    btnComp.disabled = !(inputExcel.files[0] && inputZip.files[0]);
+  }
+
+  // comparar
+  btnComp.addEventListener("click", async () => {
+    erroDiv.style.display = "none";
+    resultDiv.style.display = "none";
+    spinner.style.display = "block";
+    btnComp.disabled = true;
+
+    const fd = new FormData();
+    fd.append("excel", inputExcel.files[0]);
+    fd.append("arquivos", inputZip.files[0]);
+    fd.append("coluna", selectCol.value || "");
+
+    try {
+      const res  = await fetch("/comparar", { method: "POST", body: fd });
+      const data = await res.json();
+
+      if (data.erro) {
+        erroDiv.textContent = "Erro: " + data.erro;
+        erroDiv.style.display = "block";
+      } else {
+        renderizar(data);
+      }
+    } catch (e) {
+      erroDiv.textContent = "Falha na requisição: " + e.message;
+      erroDiv.style.display = "block";
+    } finally {
+      spinner.style.display = "none";
+      btnComp.disabled = false;
+    }
+  });
+
+  function baixarMd(conteudo, nomeArquivo) {
+    const blob = new Blob([conteudo], { type: "text/markdown;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = nomeArquivo;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  function renderizar(d) {
+    const ok = d.divergencias === 0;
+    const badge = ok
+      ? `<span class="badge-ok">✓ 100% Concluído</span>`
+      : `<span class="badge-warn">⚠ ${d.divergencias} divergência${d.divergencias !== 1 ? "s" : ""}</span>`;
+
+    let divHtml = "";
+    if (!ok) {
+      const itens = [
+        ...d.so_excel.map(n =>
+          `<li><span class="tag tag-excel">Só no Excel</span>${n}</li>`),
+        ...d.so_arquivos.map(n =>
+          `<li><span class="tag tag-pdf">Só nas Pastas</span>${n}</li>`),
+      ].join("");
+
+      divHtml = `
+        <div class="div-section">
+          <h3>Divergências encontradas</h3>
+          <ul class="list-div">${itens}</ul>
+        </div>`;
+    }
+
+    // botões de download
+    let dlHtml = `<div class="btn-download-group">
+      <button class="btn-dl btn-dl-ev" id="btn-ev">Baixar Relatório de Evidência</button>
+      ${d.bug_report_md ? `<button class="btn-dl btn-dl-bug" id="btn-bug">Baixar Bug Report</button>` : ""}
+    </div>`;
+
+    resultDiv.innerHTML = `
+      <div class="card">
+        <h2>Resultado</h2>
+        ${badge}
+        <div class="coluna-info">Coluna usada: <span>${d.coluna_usada}</span></div>
+        <div class="stat-grid">
+          <div class="stat-box">
+            <div class="valor azul">${d.total_excel}</div>
+            <div class="rotulo">No Excel</div>
+          </div>
+          <div class="stat-box">
+            <div class="valor azul">${d.total_arquivos}</div>
+            <div class="rotulo">Nas Pastas</div>
+          </div>
+          <div class="stat-box">
+            <div class="valor ${ok ? "verde" : "amarelo"}">${d.em_ambos}</div>
+            <div class="rotulo">Correspondências</div>
+          </div>
+        </div>
+        ${divHtml}
+        ${dlHtml}
+      </div>`;
+
+    document.getElementById("btn-ev").addEventListener("click", () =>
+      baixarMd(d.evidencia_md, "RELATORIO_EVIDENCIA.md"));
+
+    if (d.bug_report_md) {
+      document.getElementById("btn-bug").addEventListener("click", () =>
+        baixarMd(d.bug_report_md, "BUG_REPORT.md"));
+    }
+
+    resultDiv.style.display = "block";
+  }
+</script>
+</body>
+</html>
