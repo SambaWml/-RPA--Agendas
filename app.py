@@ -127,7 +127,7 @@ def gerar_evidencia_md(resultado: dict, col_usada: str, nome_excel: str, nome_zi
     status = "✅ CONCLUÍDO (100%)" if divergencias == 0 else "⚠️ DIVERGÊNCIA ENCONTRADA"
 
     linhas = [
-        f"# Relatório de Comparação de Agendas",
+        f"# Relatório de Comparação",
         f"*Gerado em: {agora}*\n",
         f"## Resumo Geral\n",
         f"- **Status:** {status}",
