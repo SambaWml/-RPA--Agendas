@@ -400,7 +400,7 @@
         data = await res.json();
       } else {
         const texto = await res.text();
-        const msgs = { 413: "Arquivo muito grande (limite: 200 MB).", 500: "Erro interno no servidor." };
+        const msgs = { 413: "Arquivo muito grande (limite: 1 GB).", 500: "Erro interno no servidor." };
         data = { erro: msgs[res.status] || `Erro ${res.status}: ${texto.slice(0, 120)}` };
       }
 

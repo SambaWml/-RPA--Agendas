@@ -9,7 +9,7 @@ import pandas as pd
 from flask import Flask, render_template, request, jsonify, send_file
 
 app = Flask(__name__)
-app.config["MAX_CONTENT_LENGTH"] = 200 * 1024 * 1024  # 200 MB
+app.config["MAX_CONTENT_LENGTH"] = 1024 * 1024 * 1024  # 1 GB
 
 
 @app.errorhandler(413)
