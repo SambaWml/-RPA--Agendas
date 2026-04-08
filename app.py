@@ -92,13 +92,27 @@ def nomes_da_pasta(pasta: Path) -> set[str]:
 
 
 def comparar(nomes_excel: set[str], nomes_arquivos: set[str]) -> dict:
-    so_excel = sorted(nomes_excel - nomes_arquivos)
-    so_arquivos = sorted(nomes_arquivos - nomes_excel)
-    em_ambos = sorted(nomes_excel & nomes_arquivos)
+    """
+    Considera match quando o nome do Excel é igual ao da pasta
+    ou quando o nome da pasta começa com o nome do Excel seguido de espaço.
+    Ex: 'alejandra llantada' bate com 'alejandra llantada from gannet 16308'.
+    """
+    matched_excel = set()
+    matched_arquivos = set()
+
+    for nome_ex in nomes_excel:
+        for nome_arq in nomes_arquivos:
+            if nome_arq == nome_ex or nome_arq.startswith(nome_ex + " "):
+                matched_excel.add(nome_ex)
+                matched_arquivos.add(nome_arq)
+
+    so_excel = sorted(nomes_excel - matched_excel)
+    so_arquivos = sorted(nomes_arquivos - matched_arquivos)
+
     return {
         "total_excel": len(nomes_excel),
         "total_arquivos": len(nomes_arquivos),
-        "em_ambos": len(em_ambos),
+        "em_ambos": len(matched_excel),
         "so_excel": so_excel,
         "so_arquivos": so_arquivos,
         "divergencias": len(so_excel) + len(so_arquivos),

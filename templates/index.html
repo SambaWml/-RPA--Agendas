@@ -183,6 +183,27 @@
       margin-bottom: 1rem;
     }
 
+    #campo-coluna {
+      display: none;
+      background: #161926;
+      border: 1px solid #6366f1;
+      border-radius: 10px;
+      padding: 1rem 1.1rem;
+      margin-top: 0.5rem;
+    }
+    #campo-coluna label {
+      color: #a5b4fc;
+      font-size: 0.85rem;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+    }
+    .col-hint {
+      margin-top: 0.4rem;
+      font-size: 0.75rem;
+      color: #475569;
+    }
+    .col-hint span { color: #818cf8; }
+
     .coluna-info {
       font-size: 0.78rem;
       color: #475569;
@@ -274,8 +295,9 @@
     </div>
 
     <div class="field" id="campo-coluna">
-      <label>Coluna de nomes detectada — ajuste se necessário</label>
+      <label>Qual coluna comparar com os arquivos?</label>
       <select id="select-coluna"></select>
+      <div class="col-hint" id="col-hint"></div>
     </div>
 
     <div class="field">
@@ -340,6 +362,8 @@
         if (c === data.sugerida) opt.selected = true;
         selectCol.appendChild(opt);
       });
+      const hint = document.getElementById("col-hint");
+      hint.innerHTML = `Detectado automaticamente: <span>${data.sugerida}</span>. Troque se quiser comparar por outro campo.`;
       campoCol.style.display = "block";
     } catch (_) {}
     verificarBotao();

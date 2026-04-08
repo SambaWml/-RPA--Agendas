@@ -113,14 +113,22 @@ def coletar_nomes_de_pasta(raiz: Path) -> set[str]:
 
 
 def comparar(tipo: str, nomes_excel: set[str], nomes_pastas: set[str]):
-    somente_excel = sorted(nomes_excel - nomes_pastas)
-    somente_pastas = sorted(nomes_pastas - nomes_excel)
-    em_ambos = sorted(nomes_excel & nomes_pastas)
+    matched_excel = set()
+    matched_pastas = set()
+
+    for nome_ex in nomes_excel:
+        for nome_pasta in nomes_pastas:
+            if nome_pasta == nome_ex or nome_pasta.startswith(nome_ex + " "):
+                matched_excel.add(nome_ex)
+                matched_pastas.add(nome_pasta)
+
+    somente_excel = sorted(nomes_excel - matched_excel)
+    somente_pastas = sorted(nomes_pastas - matched_pastas)
 
     print(f"\n===== {tipo.upper()} =====")
     print(f"Total no Excel: {len(nomes_excel)}")
     print(f"Total nas pastas: {len(nomes_pastas)}")
-    print(f"Em ambos: {len(em_ambos)}")
+    print(f"Em ambos: {len(matched_excel)}")
     print(f"Somente no Excel: {len(somente_excel)}")
     print(f"Somente nas pastas: {len(somente_pastas)}")
 
@@ -129,7 +137,7 @@ def comparar(tipo: str, nomes_excel: set[str], nomes_pastas: set[str]):
         linhas.append({"tipo": tipo, "nome": nome, "origem": "excel"})
     for nome in somente_pastas:
         linhas.append({"tipo": tipo, "nome": nome, "origem": "pastas"})
-    for nome in em_ambos:
+    for nome in matched_excel:
         linhas.append({"tipo": tipo, "nome": nome, "origem": "ambos"})
     return linhas
 
