@@ -392,17 +392,26 @@
     fd.append("coluna", selectCol.value || "");
 
     try {
-      const res  = await fetch("/comparar", { method: "POST", body: fd });
-      const data = await res.json();
+      const res = await fetch("/comparar", { method: "POST", body: fd });
+
+      let data;
+      const ct = res.headers.get("content-type") || "";
+      if (ct.includes("application/json")) {
+        data = await res.json();
+      } else {
+        const texto = await res.text();
+        const msgs = { 413: "Arquivo muito grande (limite: 200 MB).", 500: "Erro interno no servidor." };
+        data = { erro: msgs[res.status] || `Erro ${res.status}: ${texto.slice(0, 120)}` };
+      }
 
       if (data.erro) {
-        erroDiv.textContent = "Erro: " + data.erro;
+        erroDiv.textContent = data.erro;
         erroDiv.style.display = "block";
       } else {
         renderizar(data);
       }
     } catch (e) {
-      erroDiv.textContent = "Falha na requisição: " + e.message;
+      erroDiv.textContent = "Não foi possível conectar ao servidor: " + e.message;
       erroDiv.style.display = "block";
     } finally {
       spinner.style.display = "none";

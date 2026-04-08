@@ -12,6 +12,16 @@ app = Flask(__name__)
 app.config["MAX_CONTENT_LENGTH"] = 200 * 1024 * 1024  # 200 MB
 
 
+@app.errorhandler(413)
+def arquivo_grande_demais(_):
+    return jsonify({"erro": "Arquivo muito grande. O limite é 200 MB."}), 413
+
+
+@app.errorhandler(500)
+def erro_interno(_):
+    return jsonify({"erro": "Erro interno no servidor. Verifique os arquivos enviados."}), 500
+
+
 # ── Lógica de comparação ─────────────────────────────────────────────────────
 
 def normalizar_nome(nome) -> str:
